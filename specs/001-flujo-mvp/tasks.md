@@ -72,7 +72,7 @@ graph TD
   - **Descripción:** Configurar `.prettierrc`, `.prettierignore` y añadir a `package.json` los scripts requeridos por AGENTS.md: `npm run lint`, `npm run format:check` (`npx prettier --check .`) y `npm run format:write` (`npx prettier --write .`).
   - **Hecho cuando:** `npx prettier --check .` y `npm run lint` se ejecuten exitosamente por comando en la terminal sin fallas de configuración.
 
-- [ ] **TASK-04: Configuración del entorno de pruebas con Vitest**
+- [x] **TASK-04: Configuración del entorno de pruebas con Vitest**
   - **Ejecutor:** IA
   - **Estimación:** 20 min
   - **Dependencias:** TASK-02

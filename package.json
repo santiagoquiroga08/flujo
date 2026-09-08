@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
     "format:check": "prettier --check .",
     "format:write": "prettier --write ."
   },
@@ -24,6 +25,7 @@
     "eslint-config-next": "16.3.4",
     "prettier": "^3.9.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
