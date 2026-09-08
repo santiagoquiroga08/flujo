@@ -66,12 +66,13 @@ flujo/
 ```
 
 ### Reglas de Dependencia entre Capas
+
 1. `src/core/` tiene **cero dependencias externas**. Solo utiliza funciones puras de TypeScript. No conoce a Next.js, no importa React ni accede a base de datos.
 2. `src/db/` encapsula el acceso a datos y las entidades de persistencia.
 3. `src/actions/` actúa como controlador orquestador: recibe inputs desde la UI, invoca validaciones del `core`, persiste en `db` mediante transacciones atómicas y retorna resultados tipados `Result<T, E>`.
 4. `src/components/` y `src/app/` solo consumen datos estructurados y ejecutan Server Actions; ninguna regla de cálculo financiero reside en componentes.
 
-*(Cubre: RNF-3, RNF-5, RNF-6, Principio 1, Principio 3 y Principio 6 de la Constitución)*
+_(Cubre: RNF-3, RNF-5, RNF-6, Principio 1, Principio 3 y Principio 6 de la Constitución)_
 
 ---
 
@@ -164,6 +165,7 @@ export const transactions = sqliteTable(
 ### 2.2 Payload / Ejemplos JSON de las Estructuras de Datos
 
 #### Categoría (`Category`)
+
 ```json
 {
   "id": "cat_7f8a9b0c-1234-4567-89ab-cdef01234567",
@@ -175,6 +177,7 @@ export const transactions = sqliteTable(
 ```
 
 #### Presupuesto Mensual (`MonthlyBudget`)
+
 ```json
 {
   "id": "bdg_1a2b3c4d-5678-90ab-cdef-1234567890ab",
@@ -188,6 +191,7 @@ export const transactions = sqliteTable(
 ```
 
 #### Transacción Real (`Transaction`)
+
 ```json
 {
   "id": "tx_9z8y7x6w-5432-10fe-dcba-0987654321fe",
@@ -203,7 +207,7 @@ export const transactions = sqliteTable(
 }
 ```
 
-*(Cubre: RF-1, RF-2, RF-3, RNF-1, RNF-5, Principio 5 y Principio 6 de la Constitución)*
+_(Cubre: RF-1, RF-2, RF-3, RNF-1, RNF-5, Principio 5 y Principio 6 de la Constitución)_
 
 ---
 
@@ -212,6 +216,7 @@ export const transactions = sqliteTable(
 Para asegurar **precisión financiera exacta** (RNF-1), toda la matemática se implementa sobre enteros que representan centavos (`cents = Math.round(monto * 100)`). El redondeo de división para porcentajes utiliza el algoritmo estándar `HALF_UP`.
 
 ### 3.1 Algoritmo: Redondeo Matemático `HALF_UP` y Formateo Monetario
+
 ```typescript
 ALGORITMO roundHalfUp(valorDecimal, decimalesDeseados):
   factor = 10 ^ decimalesDeseados
@@ -228,7 +233,7 @@ ALGORITMO centsToCurrencyString(centavos):
   parteDecimal = absolutoCentavos MOD 100
   cadenaDecimal = parteDecimal < 10 ? ("0" + parteDecimal) : parteDecimal
   cadenaEntera = formatearConSeparadoresDeMiles(parteEntera)
-  
+
   SI esNegativo ENTONCES:
     RETORNAR "-$" + cadenaEntera + "." + cadenaDecimal
   SINO:
@@ -236,10 +241,11 @@ ALGORITMO centsToCurrencyString(centavos):
 ```
 
 ### 3.2 Algoritmo: Cálculo de Métricas por Categoría (`calculateCategoryMetrics`)
+
 Cubre: RF-4 (CA-4.1, CA-4.2, CA-4.3, CA-4.4).
 
 ```typescript
-TIPO CategoryStatus = 
+TIPO CategoryStatus =
   | 'normal'              // Gasto <= Presupuesto o Ingreso con progreso
   | 'overbudget'          // Gasto > Presupuesto (con Presupuesto > 0)
   | 'unbudgeted_expense'  // Gasto > 0 con Presupuesto == 0
@@ -253,11 +259,11 @@ ALGORITMO calculateCategoryMetrics(categoryType, budgetCents, actualCents):
 
   SI categoryType == 'expense' ENTONCES:
     remainingCents = budgetCents - actualCents
-    
+
     SI budgetCents > 0 ENTONCES:
       rawPercentage = (actualCents / budgetCents) * 100
       executionPercentage = roundHalfUp(rawPercentage, 2)
-      
+
       SI remainingCents < 0 ENTONCES:
         status = 'overbudget'
       SINO:
@@ -280,7 +286,7 @@ ALGORITMO calculateCategoryMetrics(categoryType, budgetCents, actualCents):
 
   SINO: // categoryType == 'income'
     differenceCents = actualCents - budgetCents
-    
+
     SI budgetCents > 0 ENTONCES:
       rawPercentage = (actualCents / budgetCents) * 100
       fulfillmentPercentage = roundHalfUp(rawPercentage, 2)
@@ -302,6 +308,7 @@ ALGORITMO calculateCategoryMetrics(categoryType, budgetCents, actualCents):
 ```
 
 ### 3.3 Algoritmo: Resumen Mensual Consolidado y Desviación Neta (`calculateMonthlySummary`)
+
 Cubre: RF-2 (CA-2.6), RF-5 (CA-5.1).
 
 ```typescript
@@ -343,6 +350,7 @@ ALGORITMO calculateMonthlySummary(categoryMetricsList):
 ```
 
 ### 3.4 Algoritmo: Lógica de Aislamiento Mensual y Fronteras Temporales (`validateNavigationAndDates`)
+
 Cubre: RF-2 (CA-2.1), RF-3 (CA-3.3), RF-5 (CA-5.2), RNF-6.
 
 ```typescript
@@ -354,7 +362,7 @@ ALGORITMO validatePeriodNavigation(targetYearMonth, referenceDateString):
 
   SI targetYearMonth < minAllowedYearMonth ENTONCES:
     RETORNAR ERROR("No se permite consultar períodos anteriores a enero del año 2000.")
-  
+
   SI targetYearMonth > maxAllowedYearMonth ENTONCES:
     RETORNAR ERROR("El horizonte de planificación futura no puede exceder diciembre del año siguiente.")
 
@@ -389,6 +397,7 @@ ALGORITMO validateTransactionDate(transactionDateString, referenceDateString):
 ```
 
 ### 3.5 Algoritmo: Integridad Referencial para Eliminación de Categorías (`canDeleteCategory`)
+
 Cubre: RF-1 (CA-1.6, CA-1.7).
 
 ```typescript
@@ -413,6 +422,7 @@ ALGORITMO canDeleteCategory(hasAnyTransaction, maxBudgetCentsRegistered):
 ```
 
 ### 3.6 Algoritmo: Normalización de Nota de Transacción (`normalizeNote`)
+
 Cubre: RF-3 (CA-3.1).
 
 ```typescript
@@ -422,10 +432,10 @@ ALGORITMO normalizeNote(inputNote):
 
   // Reemplazar saltos de línea (\n, \r) y tabulaciones (\t) por un espacio simple
   textoSinSaltos = reemplazar(inputNote, /[\r\n\t]+/g, " ")
-  
+
   // Eliminar espacios múltiples consecutivos
   textoNormalizado = reemplazar(textoSinSaltos, /\s+/g, " ")
-  
+
   // Recortar extremos
   resultadoFinal = trim(textoNormalizado)
 
@@ -438,7 +448,7 @@ ALGORITMO normalizeNote(inputNote):
   RETORNAR OK(resultadoFinal)
 ```
 
-*(Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RNF-1, RNF-6, Principio 3 y Principio 4 de la Constitución)*
+_(Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RNF-1, RNF-6, Principio 3 y Principio 4 de la Constitución)_
 
 ---
 
@@ -453,6 +463,7 @@ export type ActionResult<T> =
 ```
 
 ### 4.1 Módulo de Categorías (`src/actions/categories.ts`)
+
 Cubre: RF-1 (CA-1.1 a CA-1.8).
 
 1. `getCategoriesAction()`
@@ -494,6 +505,7 @@ Cubre: RF-1 (CA-1.1 a CA-1.8).
 ---
 
 ### 4.2 Módulo de Presupuestos Mensuales (`src/actions/budgets.ts`)
+
 Cubre: RF-2 (CA-2.1 a CA-2.6).
 
 1. `setMonthlyBudgetAction(input: SetMonthlyBudgetInput)`
@@ -506,12 +518,13 @@ Cubre: RF-2 (CA-2.1 a CA-2.6).
      };
      ```
    - **Validaciones:** Rango monetario de 0 a $999,999,999.99 (sin decimales excedentes en la entrada). Verifica que la categoría exista.
-   - **Lógica:** Inserta o actualiza (*upsert*) el registro en `monthly_budgets`. Si `amountCents == 0`, guarda 0 (equivalente a sin presupuesto asignado, CA-2.4).
+   - **Lógica:** Inserta o actualiza (_upsert_) el registro en `monthly_budgets`. Si `amountCents == 0`, guarda 0 (equivalente a sin presupuesto asignado, CA-2.4).
    - **Respuesta exitosa:** `ActionResult<MonthlyBudgetDto>`.
 
 ---
 
 ### 4.3 Módulo de Transacciones (`src/actions/transactions.ts`)
+
 Cubre: RF-3 (CA-3.1 a CA-3.8).
 
 1. `createTransactionAction(input: CreateTransactionInput)`
@@ -556,6 +569,7 @@ Cubre: RF-3 (CA-3.1 a CA-3.8).
 ---
 
 ### 4.4 Módulo de Resumen y Navegación (`src/actions/summary.ts`)
+
 Cubre: RF-4, RF-5.
 
 1. `getMonthDashboardAction(yearMonth: string, clientToday: string)`
@@ -577,124 +591,138 @@ Cubre: RF-4, RF-5.
          expense: CategoryReportDto[];
        };
        transactions: TransactionDto[];
-     }>
+     }>;
      ```
 
-*(Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RNF-3, RNF-4)*
+_(Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RNF-3, RNF-4)_
 
 ---
 
 ## 5. Desglose Secuencial de Tareas de Implementación
 
 Conforme a las directrices de [AGENTS.md](file:///d:/antigravity/Flujo/AGENTS.md), el desglose utiliza obligatoriamente los prefijos:
+
 - `[H]` para **Acciones Humanas** (aprobaciones, verificaciones y despliegue).
 - `[I]` para **Tareas del Agente de Inteligencia Artificial** (desarrollo, scaffolding, tests y configuración).
 
 ### Fase 1: Inicialización del Entorno y Scaffolding Base
-- [ ] **T01 [H]:** Aprobación formal de este plan de arquitectura ([plan.md](file:///d:/antigravity/Flujo/specs/001-flujo-mvp/plan.md)) antes de escribir código. *(Cubre: Principio 2)*
-- [ ] **T02 [I]:** Inicializar el proyecto Next.js en el directorio raíz mediante `npx create-next-app@latest` con TypeScript en modo estricto (`strict: true`), Tailwind CSS, ESLint y App Router. *(Cubre: Simplicidad del stack, AGENTS.md)*
-- [ ] **T03 [I]:** Configurar Prettier y scripts de verificación en `package.json` (`npm run test`, `npm run lint`, `npx prettier --check .`). *(Cubre: AGENTS.md)*
-- [ ] **T04 [I]:** Instalar y configurar Vitest (`vitest`) para pruebas unitarias e integración en TypeScript puro, sin dependencias innecesarias de testing pesado. *(Cubre: Principio 4 de la Constitución)*
-- [ ] **T05 [I]:** Instalar y configurar Drizzle ORM (`drizzle-orm`, `drizzle-kit`, `better-sqlite3` y `@types/better-sqlite3`). *(Cubre: RNF-5, Principio 1)*
+
+- [ ] **T01 [H]:** Aprobación formal de este plan de arquitectura ([plan.md](file:///d:/antigravity/Flujo/specs/001-flujo-mvp/plan.md)) antes de escribir código. _(Cubre: Principio 2)_
+- [ ] **T02 [I]:** Inicializar el proyecto Next.js en el directorio raíz mediante `npx create-next-app@latest` con TypeScript en modo estricto (`strict: true`), Tailwind CSS, ESLint y App Router. _(Cubre: Simplicidad del stack, AGENTS.md)_
+- [ ] **T03 [I]:** Configurar Prettier y scripts de verificación en `package.json` (`npm run test`, `npm run lint`, `npx prettier --check .`). _(Cubre: AGENTS.md)_
+- [ ] **T04 [I]:** Instalar y configurar Vitest (`vitest`) para pruebas unitarias e integración en TypeScript puro, sin dependencias innecesarias de testing pesado. _(Cubre: Principio 4 de la Constitución)_
+- [ ] **T05 [I]:** Instalar y configurar Drizzle ORM (`drizzle-orm`, `drizzle-kit`, `better-sqlite3` y `@types/better-sqlite3`). _(Cubre: RNF-5, Principio 1)_
 
 ---
 
 ### Fase 2: Núcleo Financiero Puro (`src/core/`) [TDD - Tests Primero]
-- [ ] **T06 [I]:** Crear `src/core/types.ts` definiendo tipos semánticos en inglés (`TransactionType`, `Category`, `MonthlyBudget`, `Transaction`, `CategoryStatus`, `SummaryDeviation`). *(Cubre: CA-1.1, RNF-3, Principio 6)*
-- [ ] **T07 [I]:** Implementar pruebas unitarias en `tests/unit/money.test.ts` para conversión de centavos, formato monetario (`$1,250.00`, `-$350.50`) y redondeo `HALF_UP`. *(Cubre: RNF-1, RNF-2, Principio 4)*
-- [ ] **T08 [I]:** Implementar `src/core/money.ts` haciendo pasar todas las pruebas de aritmética en verde. *(Cubre: RNF-1, RNF-2)*
-- [ ] **T09 [I]:** Implementar pruebas unitarias en `tests/unit/dates.test.ts` para validar formato `YYYY-MM-DD`, años bisiestos/días no válidos gregorianos, horizonte temporal (`2000-01` a año actual + 1) y detección de fecha futura con referencia inyectada. *(Cubre: CA-3.3, CA-5.2, RNF-6)*
-- [ ] **T10 [I]:** Implementar `src/core/dates.ts` resolviendo la validación de calendario gregoriano y fronteras temporales. *(Cubre: CA-3.3, CA-5.2, RNF-6)*
-- [ ] **T11 [I]:** Implementar pruebas unitarias en `tests/unit/metrics.test.ts` cubriendo fórmulas de disponible, porcentajes con `HALF_UP`, casos con presupuesto `$0.00` (`N/A`), estados semánticos (`overbudget`, `unbudgeted_expense`, `unbudgeted_idle`, `unbudgeted_income`), balance consolidado y cálculo de desviación neta. *(Cubre: RF-4, RF-5, Casos límite 1 a 4)*
-- [ ] **T12 [I]:** Implementar `src/core/metrics.ts` haciendo pasar todas las pruebas de cálculo financiero en verde. *(Cubre: RF-4, RF-5)*
-- [ ] **T13 [I]:** Implementar pruebas y funciones puras de validación en `src/core/validators.ts` (normalización de notas con sustitución de `\n`, validación de 1 a 50 caracteres para nombres de categorías y reglas de borrado con `canDeleteCategory`). *(Cubre: CA-1.3, CA-1.6, CA-1.7, CA-3.1)*
+
+- [ ] **T06 [I]:** Crear `src/core/types.ts` definiendo tipos semánticos en inglés (`TransactionType`, `Category`, `MonthlyBudget`, `Transaction`, `CategoryStatus`, `SummaryDeviation`). _(Cubre: CA-1.1, RNF-3, Principio 6)_
+- [ ] **T07 [I]:** Implementar pruebas unitarias en `tests/unit/money.test.ts` para conversión de centavos, formato monetario (`$1,250.00`, `-$350.50`) y redondeo `HALF_UP`. _(Cubre: RNF-1, RNF-2, Principio 4)_
+- [ ] **T08 [I]:** Implementar `src/core/money.ts` haciendo pasar todas las pruebas de aritmética en verde. _(Cubre: RNF-1, RNF-2)_
+- [ ] **T09 [I]:** Implementar pruebas unitarias en `tests/unit/dates.test.ts` para validar formato `YYYY-MM-DD`, años bisiestos/días no válidos gregorianos, horizonte temporal (`2000-01` a año actual + 1) y detección de fecha futura con referencia inyectada. _(Cubre: CA-3.3, CA-5.2, RNF-6)_
+- [ ] **T10 [I]:** Implementar `src/core/dates.ts` resolviendo la validación de calendario gregoriano y fronteras temporales. _(Cubre: CA-3.3, CA-5.2, RNF-6)_
+- [ ] **T11 [I]:** Implementar pruebas unitarias en `tests/unit/metrics.test.ts` cubriendo fórmulas de disponible, porcentajes con `HALF_UP`, casos con presupuesto `$0.00` (`N/A`), estados semánticos (`overbudget`, `unbudgeted_expense`, `unbudgeted_idle`, `unbudgeted_income`), balance consolidado y cálculo de desviación neta. _(Cubre: RF-4, RF-5, Casos límite 1 a 4)_
+- [ ] **T12 [I]:** Implementar `src/core/metrics.ts` haciendo pasar todas las pruebas de cálculo financiero en verde. _(Cubre: RF-4, RF-5)_
+- [ ] **T13 [I]:** Implementar pruebas y funciones puras de validación en `src/core/validators.ts` (normalización de notas con sustitución de `\n`, validación de 1 a 50 caracteres para nombres de categorías y reglas de borrado con `canDeleteCategory`). _(Cubre: CA-1.3, CA-1.6, CA-1.7, CA-3.1)_
 
 ---
 
 ### Fase 3: Capa de Persistencia y Migraciones (`src/db/`)
-- [ ] **T14 [I]:** Definir esquema relacional en `src/db/schema.ts` (`categories`, `monthly_budgets`, `transactions`) con restricciones de unicidad e índices. *(Cubre: RF-1, RF-2, RF-3, RNF-5)*
-- [ ] **T15 [I]:** Configurar cliente SQLite local en `src/db/index.ts` y script de generación de migraciones con `drizzle-kit`. *(Cubre: RNF-5)*
-- [ ] **T16 [I]:** Implementar script de semilla `src/db/seed.ts` para poblar automáticamente el catálogo sugerido inicial (`Alimentación`, `Vivienda`, `Transporte`, `Servicios`, `Salud`, `Ocio`, `Salario`, `Otros`) en la primera ejecución. *(Cubre: CA-1.2)*
-- [ ] **T17 [I]:** Implementar pruebas de integración de base de datos en `tests/integration/` verificando unicidad insensible a mayúsculas/minúsculas por tipo, autoexclusión en renombrado e integridad referencial en cascada/bloqueo. *(Cubre: CA-1.4, CA-1.6, CA-1.7)*
+
+- [ ] **T14 [I]:** Definir esquema relacional en `src/db/schema.ts` (`categories`, `monthly_budgets`, `transactions`) con restricciones de unicidad e índices. _(Cubre: RF-1, RF-2, RF-3, RNF-5)_
+- [ ] **T15 [I]:** Configurar cliente SQLite local en `src/db/index.ts` y script de generación de migraciones con `drizzle-kit`. _(Cubre: RNF-5)_
+- [ ] **T16 [I]:** Implementar script de semilla `src/db/seed.ts` para poblar automáticamente el catálogo sugerido inicial (`Alimentación`, `Vivienda`, `Transporte`, `Servicios`, `Salud`, `Ocio`, `Salario`, `Otros`) en la primera ejecución. _(Cubre: CA-1.2)_
+- [ ] **T17 [I]:** Implementar pruebas de integración de base de datos en `tests/integration/` verificando unicidad insensible a mayúsculas/minúsculas por tipo, autoexclusión en renombrado e integridad referencial en cascada/bloqueo. _(Cubre: CA-1.4, CA-1.6, CA-1.7)_
 
 ---
 
 ### Fase 4: Server Actions y Orquestación (`src/actions/`)
-- [ ] **T18 [I]:** Implementar `src/actions/categories.ts` (`getCategoriesAction`, `createCategoryAction`, `updateCategoryAction`, `deleteCategoryAction`) integrando validaciones del core y manejo de errores en español. *(Cubre: RF-1)*
-- [ ] **T19 [I]:** Implementar `src/actions/budgets.ts` (`setMonthlyBudgetAction`) para asignación y restablecimiento de límites mensuales. *(Cubre: RF-2)*
-- [ ] **T20 [I]:** Implementar `src/actions/transactions.ts` (`createTransactionAction`, `updateTransactionAction`, `deleteTransactionAction`) asegurando derivación automática del tipo, validación de fecha contra el cliente, y restricción de cambio de tipo en edición. *(Cubre: RF-3)*
-- [ ] **T21 [I]:** Implementar `src/actions/summary.ts` (`getMonthDashboardAction`) reuniendo presupuestos, gastos reales y métricas consolidadas en una consulta atómica eficiente (< 200 ms). *(Cubre: RF-4, RF-5, RNF-4)*
+
+- [ ] **T18 [I]:** Implementar `src/actions/categories.ts` (`getCategoriesAction`, `createCategoryAction`, `updateCategoryAction`, `deleteCategoryAction`) integrando validaciones del core y manejo de errores en español. _(Cubre: RF-1)_
+- [ ] **T19 [I]:** Implementar `src/actions/budgets.ts` (`setMonthlyBudgetAction`) para asignación y restablecimiento de límites mensuales. _(Cubre: RF-2)_
+- [ ] **T20 [I]:** Implementar `src/actions/transactions.ts` (`createTransactionAction`, `updateTransactionAction`, `deleteTransactionAction`) asegurando derivación automática del tipo, validación de fecha contra el cliente, y restricción de cambio de tipo en edición. _(Cubre: RF-3)_
+- [ ] **T21 [I]:** Implementar `src/actions/summary.ts` (`getMonthDashboardAction`) reuniendo presupuestos, gastos reales y métricas consolidadas en una consulta atómica eficiente (< 200 ms). _(Cubre: RF-4, RF-5, RNF-4)_
 
 ---
 
 ### Fase 5: Interfaz de Usuario y Vistas (`src/components/`, `src/app/`)
-- [ ] **T22 [I]:** Construir el layout global y shell de la aplicación en `src/app/layout.tsx` con soporte de tema limpio, paleta de colores armónica, tipografía moderna (Inter) y estructura semántica. *(Cubre: RNF-3)*
-- [ ] **T23 [I]:** Implementar barra de navegación temporal y selector de mes en `src/components/navigation/MonthNavigator.tsx` con control de límites (`2000-01` a año actual + 1) y detección de período futuro. *(Cubre: CA-5.2)*
-- [ ] **T24 [I]:** Construir panel de resumen financiero consolidado en `src/components/summary/MonthlySummaryCard.tsx` (Ingresos Reales, Gastos Reales, Balance Neto y tarjeta de Desviación con indicador favorable/desfavorable/neutro). *(Cubre: RF-5, CA-5.1)*
-- [ ] **T25 [I]:** Construir la vista de categorías y presupuestos en `src/components/budgets/BudgetCategoryList.tsx` mostrando gasto real, presupuesto, barra de progreso con porcentaje redondeado `HALF_UP` o `N/A`, disponible y badges de estado (`overbudget`, `unbudgeted_expense`, etc.). *(Cubre: RF-2, RF-4)*
-- [ ] **T26 [I]:** Implementar modal de edición/asignación rápida de presupuestos por categoría. *(Cubre: RF-2)*
-- [ ] **T27 [I]:** Implementar tabla y listado cronológico de transacciones en `src/components/transactions/TransactionList.tsx` con ordenamiento descendente por fecha y botón de borrado/edición. *(Cubre: RF-3, CA-3.8)*
-- [ ] **T28 [I]:** Construir modal/formulario de registro y edición de transacciones en `src/components/transactions/TransactionModal.tsx` (monto, categoría con tipo derivado implícito, fecha calendario y nota normalizada). En meses futuros, el botón de registrar debe mostrarse deshabilitado con tooltip explicativo. *(Cubre: CA-3.1, CA-3.3, CA-3.6, CA-5.2)*
-- [ ] **T29 [I]:** Construir modal de gestión del catálogo de categorías en `src/components/categories/CategoryManagerModal.tsx` para crear, renombrar y eliminar categorías respetando bloqueos de histórico. *(Cubre: RF-1)*
-- [ ] **T30 [I]:** Integrar todos los componentes en la página mensual `src/app/[yearMonth]/page.tsx` garantizando carga reactiva de datos y estados vacíos cuando el mes carezca de movimientos. *(Cubre: Caso límite 11, RNF-4)*
+
+- [ ] **T22 [I]:** Construir el layout global y shell de la aplicación en `src/app/layout.tsx` con soporte de tema limpio, paleta de colores armónica, tipografía moderna (Inter) y estructura semántica. _(Cubre: RNF-3)_
+- [ ] **T23 [I]:** Implementar barra de navegación temporal y selector de mes en `src/components/navigation/MonthNavigator.tsx` con control de límites (`2000-01` a año actual + 1) y detección de período futuro. _(Cubre: CA-5.2)_
+- [ ] **T24 [I]:** Construir panel de resumen financiero consolidado en `src/components/summary/MonthlySummaryCard.tsx` (Ingresos Reales, Gastos Reales, Balance Neto y tarjeta de Desviación con indicador favorable/desfavorable/neutro). _(Cubre: RF-5, CA-5.1)_
+- [ ] **T25 [I]:** Construir la vista de categorías y presupuestos en `src/components/budgets/BudgetCategoryList.tsx` mostrando gasto real, presupuesto, barra de progreso con porcentaje redondeado `HALF_UP` o `N/A`, disponible y badges de estado (`overbudget`, `unbudgeted_expense`, etc.). _(Cubre: RF-2, RF-4)_
+- [ ] **T26 [I]:** Implementar modal de edición/asignación rápida de presupuestos por categoría. _(Cubre: RF-2)_
+- [ ] **T27 [I]:** Implementar tabla y listado cronológico de transacciones en `src/components/transactions/TransactionList.tsx` con ordenamiento descendente por fecha y botón de borrado/edición. _(Cubre: RF-3, CA-3.8)_
+- [ ] **T28 [I]:** Construir modal/formulario de registro y edición de transacciones en `src/components/transactions/TransactionModal.tsx` (monto, categoría con tipo derivado implícito, fecha calendario y nota normalizada). En meses futuros, el botón de registrar debe mostrarse deshabilitado con tooltip explicativo. _(Cubre: CA-3.1, CA-3.3, CA-3.6, CA-5.2)_
+- [ ] **T29 [I]:** Construir modal de gestión del catálogo de categorías en `src/components/categories/CategoryManagerModal.tsx` para crear, renombrar y eliminar categorías respetando bloqueos de histórico. _(Cubre: RF-1)_
+- [ ] **T30 [I]:** Integrar todos los componentes en la página mensual `src/app/[yearMonth]/page.tsx` garantizando carga reactiva de datos y estados vacíos cuando el mes carezca de movimientos. _(Cubre: Caso límite 11, RNF-4)_
 
 ---
 
 ### Fase 6: Control de Calidad, Auditoría y Cierre
-- [ ] **T31 [I]:** Ejecutar suite completa de pruebas unitarias e integración (`npm run test`) validando 100% de tests en verde. *(Cubre: Principio 4 de la Constitución, AGENTS.md)*
-- [ ] **T32 [I]:** Ejecutar análisis estático y formateo (`npm run lint && npx prettier --check .`) resolviendo cualquier advertencia de linter o tipado. *(Cubre: AGENTS.md)*
-- [ ] **T33 [H]:** Verificación manual en navegador por parte del usuario de los flujos de planificación mensual, registro de gastos, sobregiro visual y navegación histórica. *(Cubre: Criterios de finalización)*
 
-*(Cubre: Todas las historias de usuario US-1 a US-6 y RF-1 a RF-5)*
+- [ ] **T31 [I]:** Ejecutar suite completa de pruebas unitarias e integración (`npm run test`) validando 100% de tests en verde. _(Cubre: Principio 4 de la Constitución, AGENTS.md)_
+- [ ] **T32 [I]:** Ejecutar análisis estático y formateo (`npm run lint && npx prettier --check .`) resolviendo cualquier advertencia de linter o tipado. _(Cubre: AGENTS.md)_
+- [ ] **T33 [H]:** Verificación manual en navegador por parte del usuario de los flujos de planificación mensual, registro de gastos, sobregiro visual y navegación histórica. _(Cubre: Criterios de finalización)_
+
+_(Cubre: Todas las historias de usuario US-1 a US-6 y RF-1 a RF-5)_
 
 ---
 
 ## 6. Decisiones Técnicas Justificadas
 
 ### 6.1 Representación Monetaria: Enteros en Centavos vs Números en Punto Flotante (`Float`)
+
 - **Decisión adoptada:** Almacenar y operar todos los montos en **centavos enteros** (`amountCents: integer` en SQLite y `number` entero en TypeScript), formateando a decimal (`$X.XX`) únicamente en la capa de presentación.
 - **Alternativa descartada:** Uso de números flotantes tradicionales de JavaScript (`number` con decimales como `12.55`).
 - **Justificación:** Los números flotantes IEEE 754 sufren de imprecisiones binarias acumulativas (ej. `0.1 + 0.2 = 0.30000000000000004`), lo cual es inaceptable en un sistema contable. El uso de enteros elimina cualquier error de redondeo acumulado, cumple estrictamente con el **RNF-1** y no requiere dependencias pesadas de terceros (Principio 1).
 
 ### 6.2 Motor de Persistencia: SQLite Local (`better-sqlite3`) con Drizzle ORM
+
 - **Decisión adoptada:** Base de datos relacional SQLite embebida en archivo local gestionada mediante Drizzle ORM.
 - **Alternativa descartada:** PostgreSQL / MySQL en contenedor Docker o servicios de bases de datos en la nube (Supabase, PlanetScale).
 - **Justificación:** Cumple el principio de **local-first y simplicidad del stack** (Principio 1 y 5 de la Constitución y RNF-5). No añade latencia de red (< 200 ms exigidos en RNF-4), no requiere configuración de infraestructura externa para el usuario y mantiene la integridad referencial relacional estricta (claves foráneas e índices de unicidad). Drizzle ORM provee seguridad de tipos en tiempo de compilación con cero sobrecarga en tiempo de ejecución.
 
 ### 6.3 Comunicación Cliente-Servidor: Server Actions de Next.js
+
 - **Decisión adoptada:** Utilizar Server Actions nativas de Next.js (`'use server'`) con respuestas tipadas `ActionResult<T>`.
 - **Alternativa descartada:** Creación de una API REST tradicional con endpoints manuales (`/api/transactions`, `/api/categories`) y consumo mediante `fetch`/Axios.
-- **Justificación:** Reduce el código repetitivo (*boilerplate*), provee revalidación automática de rutas (`revalidatePath`), elimina serializaciones manuales y mantiene la arquitectura como un **monolito ligero** sin servicios desacoplados artificiales (Principio 1).
+- **Justificación:** Reduce el código repetitivo (_boilerplate_), provee revalidación automática de rutas (`revalidatePath`), elimina serializaciones manuales y mantiene la arquitectura como un **monolito ligero** sin servicios desacoplados artificiales (Principio 1).
 
 ### 6.4 Inyección de Fecha del Sistema en el Núcleo
+
 - **Decisión adoptada:** Las funciones puras de `src/core/` que evalúan fechas futuras reciben la fecha de referencia del usuario como parámetro explícito (`referenceDate: string`).
 - **Alternativa descartada:** Invocar `new Date()` directamente dentro de los métodos del core financiero.
-- **Justificación:** Garantiza el **determinismo total en pruebas unitarias** (Principio 4 y RNF-6). Permite testear sin *mocks* complejos cómo se comportaría el sistema en cualquier fecha del año 2000, 2026 o en fronteras de fin de año y meses bisiestos.
+- **Justificación:** Garantiza el **determinismo total en pruebas unitarias** (Principio 4 y RNF-6). Permite testear sin _mocks_ complejos cómo se comportaría el sistema en cualquier fecha del año 2000, 2026 o en fronteras de fin de año y meses bisiestos.
 
 ### 6.5 Unicidad de Nombres de Categoría por Tipo
+
 - **Decisión adoptada:** La unicidad del nombre se restringe al mismo tipo (`income` o `expense`), permitiendo repetir un nombre si pertenecen a tipos opuestos (ej. `Otros`).
 - **Alternativa descartada:** Unicidad global estricta en todo el catálogo sin importar el tipo.
 - **Justificación:** Resuelve la contradicción detectada en QA respecto al catálogo inicial (`Otros` en ingresos impedía crear `Otros` en gastos). Refleja fielmente la práctica habitual de finanzas personales donde rubros misceláneos coexisten en ambas naturalezas.
 
-*(Cubre: Principio 1, Principio 2, Principio 3, Principio 5 y RNF-1 a RNF-6)*
+_(Cubre: Principio 1, Principio 2, Principio 3, Principio 5 y RNF-1 a RNF-6)_
 
 ---
 
 ## 7. Estrategia de Tests
 
-En cumplimiento con el **Principio 4 de la Constitución** (*"todo cálculo financiero crítico exige tests automatizados en verde antes de dar por cerrada una tarea"*), la estrategia contempla pruebas unitarias exhaustivas y pruebas de integración focalizadas.
+En cumplimiento con el **Principio 4 de la Constitución** (_"todo cálculo financiero crítico exige tests automatizados en verde antes de dar por cerrada una tarea"_), la estrategia contempla pruebas unitarias exhaustivas y pruebas de integración focalizadas.
 
 ### 7.1 Pruebas Unitarias del Núcleo Financiero (`tests/unit/`)
+
 Se ejecutan mediante Vitest a nivel de función pura, sin inicializar servidor ni base de datos, con tiempo de ejecución < 500 ms.
 
-| Módulo | Casos de Prueba Críticos | Requisito / Caso Límite |
-| :--- | :--- | :--- |
-| `money.test.ts` | - Conversión bidireccional monto decimal a centavos enteros.<br>- Formato monetario con separador de miles y centavos (`$0.00`, `$1,250.00`, `-$350.50`).<br>- Algoritmo `HALF_UP` en divisiones periódicas (ej. tercio resulta en `33.33%`, `16.666%` en `16.67%`). | RNF-1, RNF-2 |
-| `dates.test.ts` | - Rechazo de fechas anteriores a `2000-01-01`.<br>- Rechazo de fechas futuras frente a la fecha inyectada.<br>- Validación gregoriana: rechazo de `2026-02-29` (año común) y aceptación de `2024-02-29` (bisiesto).<br>- Horizonte de navegación: navegación permitida hasta diciembre de año+1 y bloqueo más allá. | CA-3.3, CA-5.2, Casos límite 8 y 9 |
-| `metrics.test.ts` | - Categoría de gasto: disponible positivo, límite alcanzado ($100 de $100 = 100.00%) y sobregiro negativo con `overbudget`.<br>- Categoría con presupuesto cero y gasto > 0: retorna `N/A`, disponible negativo y estado `unbudgeted_expense`.<br>- Categoría con presupuesto cero y gasto cero: retorna `N/A`, disponible `$0.00` y estado `unbudgeted_idle`.<br>- Totales mensuales: suma de metas, suma de gastos, balance neto.<br>- Desviación neta: cálculo con superávit, déficit y caso de desviación exacta `$0.00`. | RF-4, RF-5, Casos límite 1, 2, 3, 4 |
-| `validators.test.ts` | - Sanitización de notas: conversión de `\n`, `\r`, `\t` a espacios simples y trim.<br>- Rechazo de notas de más de 250 caracteres.<br>- Validación de nombre de categoría (1 a 50 caracteres, no vacío).<br>- Lógica `canDeleteCategory`: bloqueo si tiene transacciones o presupuesto > 0; aprobación si ambos son 0. | CA-1.3, CA-1.6, CA-1.7, CA-3.1 |
+| Módulo               | Casos de Prueba Críticos                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Requisito / Caso Límite             |
+| :------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------- |
+| `money.test.ts`      | - Conversión bidireccional monto decimal a centavos enteros.<br>- Formato monetario con separador de miles y centavos (`$0.00`, `$1,250.00`, `-$350.50`).<br>- Algoritmo `HALF_UP` en divisiones periódicas (ej. tercio resulta en `33.33%`, `16.666%` en `16.67%`).                                                                                                                                                                                                                                                          | RNF-1, RNF-2                        |
+| `dates.test.ts`      | - Rechazo de fechas anteriores a `2000-01-01`.<br>- Rechazo de fechas futuras frente a la fecha inyectada.<br>- Validación gregoriana: rechazo de `2026-02-29` (año común) y aceptación de `2024-02-29` (bisiesto).<br>- Horizonte de navegación: navegación permitida hasta diciembre de año+1 y bloqueo más allá.                                                                                                                                                                                                           | CA-3.3, CA-5.2, Casos límite 8 y 9  |
+| `metrics.test.ts`    | - Categoría de gasto: disponible positivo, límite alcanzado ($100 de $100 = 100.00%) y sobregiro negativo con `overbudget`.<br>- Categoría con presupuesto cero y gasto > 0: retorna `N/A`, disponible negativo y estado `unbudgeted_expense`.<br>- Categoría con presupuesto cero y gasto cero: retorna `N/A`, disponible `$0.00` y estado `unbudgeted_idle`.<br>- Totales mensuales: suma de metas, suma de gastos, balance neto.<br>- Desviación neta: cálculo con superávit, déficit y caso de desviación exacta `$0.00`. | RF-4, RF-5, Casos límite 1, 2, 3, 4 |
+| `validators.test.ts` | - Sanitización de notas: conversión de `\n`, `\r`, `\t` a espacios simples y trim.<br>- Rechazo de notas de más de 250 caracteres.<br>- Validación de nombre de categoría (1 a 50 caracteres, no vacío).<br>- Lógica `canDeleteCategory`: bloqueo si tiene transacciones o presupuesto > 0; aprobación si ambos son 0.                                                                                                                                                                                                        | CA-1.3, CA-1.6, CA-1.7, CA-3.1      |
 
 ### 7.2 Pruebas de Integración con Persistencia (`tests/integration/`)
+
 Utilizan una base de datos SQLite en memoria (`:memory:`) levantada por Vitest con el esquema de Drizzle aplicado.
 
 1. **Catálogo de Categorías (`categories.test.ts`):**
@@ -706,7 +734,7 @@ Utilizan una base de datos SQLite en memoria (`:memory:`) levantada por Vitest c
    - Rechazo de eliminación de categoría si se registra al menos un presupuesto > 0 o una transacción.
 
 2. **Presupuestos y Aislamiento (`budgets.test.ts`):**
-   - Configuración de presupuesto en `2026-03` y verificación de que `2026-04` permanece en `$0.00` (*sin arrastre*).
+   - Configuración de presupuesto en `2026-03` y verificación de que `2026-04` permanece en `$0.00` (_sin arrastre_).
    - Actualización de presupuesto a `$0.00` y verificación de restablecimiento del estado.
 
 3. **Transacciones y Recálculos (`transactions.test.ts`):**
@@ -715,4 +743,4 @@ Utilizan una base de datos SQLite en memoria (`:memory:`) levantada por Vitest c
    - Edición de fecha de transacción de marzo a abril: verifica recálculo reactivo automático en los totales de ambos meses.
    - Eliminación de la última transacción de un mes: verifica que el mes pasa al estado vacío orientativo con balances en `$0.00`.
 
-*(Cubre: Principio 4 de la Constitución y AGENTS.md)*
+_(Cubre: Principio 4 de la Constitución y AGENTS.md)_

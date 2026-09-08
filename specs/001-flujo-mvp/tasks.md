@@ -9,6 +9,7 @@ Este documento contiene el desglose granular y secuencial de tareas para la impl
 Para garantizar un desarrollo ágil, seguro y con supervisión adecuada, las tareas se dividen según su ejecutor natural:
 
 ### 1.1 Tareas Asignables a la Inteligencia Artificial (IA) `[IA]`
+
 - **Scaffolding y configuración de herramientas:** Inicialización del proyecto Next.js, configuración de TypeScript en modo estricto, Tailwind CSS, Prettier, ESLint y Vitest.
 - **Desarrollo de lógica pura en TDD (`src/core/`):** Escritura de pruebas unitarias y funciones puras de cálculo financiero (aritmética en centavos, redondeo `HALF_UP`, validación de calendario gregoriano, métricas de sobregiro y sanitización de entradas).
 - **Capa de persistencia (`src/db/`):** Definición de esquemas relacionales Drizzle ORM, índices, restricciones de integridad referencial, scripts de migración y seed inicial.
@@ -17,6 +18,7 @@ Para garantizar un desarrollo ágil, seguro y con supervisión adecuada, las tar
 - **Ejecución y resolución de pruebas y linters:** Ejecución automatizada de `npm run test`, `npm run lint` y corrección de advertencias o errores de compilación.
 
 ### 1.2 Tareas Exclusivas de un Humano `[Humano]`
+
 - **Aprobación de especificaciones y arquitectura:** Validación formal de [spec.md](file:///d:/antigravity/Flujo/specs/001-flujo-mvp/spec.md) y [plan.md](file:///d:/antigravity/Flujo/specs/001-flujo-mvp/plan.md) antes de iniciar la codificación (Principio 2 de la Constitución).
 - **Decisiones sobre alcance o cambios de requisitos:** Resolución de dudas no cubiertas en la especificación activa.
 - **Pruebas de aceptación de usuario (UAT) en navegador:** Comprobación interactiva del flujo completo en un navegador real (sensación de uso, legibilidad, flujos de sobregiro y navegación temporal).
@@ -46,7 +48,7 @@ graph TD
 
 ### Fase 1: Inicialización del Entorno y Scaffolding Base
 
-- [ ] **TASK-01: Aprobación formal del plan técnico y especificación**
+- [x] **TASK-01: Aprobación formal del plan técnico y especificación**
   - **Ejecutor:** Humano
   - **Estimación:** 15 min
   - **Dependencias:** Ninguna
@@ -62,7 +64,7 @@ graph TD
   - **Descripción:** Ejecutar la inicialización en el directorio raíz usando `create-next-app` con App Router, TypeScript en modo estricto (`strict: true`), Tailwind CSS y ESLint.
   - **Hecho cuando:** Los archivos `package.json`, `tsconfig.json` (con `"strict": true`) y `tailwind.config.ts` existan y `npm run build` o `npm run dev` compile sin errores.
 
-- [ ] **TASK-03: Configuración de Prettier y scripts de calidad en `package.json`**
+- [x] **TASK-03: Configuración de Prettier y scripts de calidad en `package.json`**
   - **Ejecutor:** IA
   - **Estimación:** 15 min
   - **Dependencias:** TASK-02
@@ -405,11 +407,11 @@ graph TD
 
 ## 4. Matriz de Cobertura de Requisitos Funcionales (RF)
 
-| Requisito Funcional | Criterios de Aceptación Cubiertos | Tareas que lo Implementan y Verifican |
-| :--- | :--- | :--- |
-| **RF-1: Catálogo y Ciclo de Vida de Categorías** | CA-1.1 a CA-1.8 | TASK-06, TASK-15, TASK-16, TASK-17, TASK-19, TASK-20, TASK-24, TASK-36, TASK-40 |
-| **RF-2: Planificación Presupuestaria Mensual** | CA-2.1 a CA-2.6 | TASK-13, TASK-14, TASK-17, TASK-21, TASK-25, TASK-32, TASK-33, TASK-40 |
-| **RF-3: Registro y Mantenimiento de Transacciones** | CA-3.1 a CA-3.8 | TASK-09, TASK-10, TASK-15, TASK-16, TASK-17, TASK-22, TASK-26, TASK-34, TASK-35, TASK-40 |
-| **RF-4: Control de Ejecución y Sobregasto** | CA-4.1 a CA-4.4 | TASK-06, TASK-11, TASK-12, TASK-27, TASK-31, TASK-32, TASK-40 |
-| **RF-5: Resumen Consolidado y Navegación** | CA-5.1, CA-5.2 | TASK-09, TASK-10, TASK-13, TASK-14, TASK-27, TASK-30, TASK-31, TASK-37, TASK-40 |
-| **Requisitos No Funcionales (RNF)** | RNF-1 a RNF-6 | TASK-02, TASK-06, TASK-07, TASK-08, TASK-09, TASK-10, TASK-17, TASK-18, TASK-27, TASK-38, TASK-39 |
+| Requisito Funcional                                 | Criterios de Aceptación Cubiertos | Tareas que lo Implementan y Verifican                                                             |
+| :-------------------------------------------------- | :-------------------------------- | :------------------------------------------------------------------------------------------------ |
+| **RF-1: Catálogo y Ciclo de Vida de Categorías**    | CA-1.1 a CA-1.8                   | TASK-06, TASK-15, TASK-16, TASK-17, TASK-19, TASK-20, TASK-24, TASK-36, TASK-40                   |
+| **RF-2: Planificación Presupuestaria Mensual**      | CA-2.1 a CA-2.6                   | TASK-13, TASK-14, TASK-17, TASK-21, TASK-25, TASK-32, TASK-33, TASK-40                            |
+| **RF-3: Registro y Mantenimiento de Transacciones** | CA-3.1 a CA-3.8                   | TASK-09, TASK-10, TASK-15, TASK-16, TASK-17, TASK-22, TASK-26, TASK-34, TASK-35, TASK-40          |
+| **RF-4: Control de Ejecución y Sobregasto**         | CA-4.1 a CA-4.4                   | TASK-06, TASK-11, TASK-12, TASK-27, TASK-31, TASK-32, TASK-40                                     |
+| **RF-5: Resumen Consolidado y Navegación**          | CA-5.1, CA-5.2                    | TASK-09, TASK-10, TASK-13, TASK-14, TASK-27, TASK-30, TASK-31, TASK-37, TASK-40                   |
+| **Requisitos No Funcionales (RNF)**                 | RNF-1 a RNF-6                     | TASK-02, TASK-06, TASK-07, TASK-08, TASK-09, TASK-10, TASK-17, TASK-18, TASK-27, TASK-38, TASK-39 |

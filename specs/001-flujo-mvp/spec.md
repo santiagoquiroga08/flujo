@@ -3,10 +3,13 @@
 ## 1. Contexto y objetivo
 
 ### 1.1 Contexto
+
 La gestión financiera personal suele verse entorpecida por herramientas complejas, hojas de cálculo dispersas o aplicaciones con sincronizaciones automáticas opacas que distancian al usuario de la conciencia real sobre su dinero. Flujo surge como una herramienta para devolver el control y la visibilidad al usuario mediante la planificación intencional y el registro manual mensual.
 
 ### 1.2 Objetivo
+
 El objetivo del MVP es proveer un sistema simple, visual y confiable para:
+
 1. Planificar mensualmente presupuestos límite por categorías de gasto y estimaciones de metas por categorías de ingreso.
 2. Registrar manualmente ingresos y gastos clasificados por categoría, fecha y monto.
 3. Comparar en tiempo real la ejecución financiera frente a lo planificado mediante balances consolidados, porcentajes de cumplimiento y detección visual de sobregiros.
@@ -16,6 +19,7 @@ El objetivo del MVP es proveer un sistema simple, visual y confiable para:
 ## 2. Usuarios
 
 ### 2.1 Perfil de Usuario
+
 - **Usuario Individual:** Persona que gestiona sus propias finanzas personales de manera reflexiva y manual. Requiere saber con exactitud cuánto dinero planea ingresar, cuánto ha presupuestado para gastar en cada rubro y qué desvíos o remanentes tiene en el mes actual, en meses anteriores o en meses futuros planificados.
 - **Modo de Operación:** Monousuario local. No requiere perfiles compartidos, roles de acceso ni sincronización entre dispositivos en esta fase inicial.
 
@@ -35,14 +39,15 @@ El objetivo del MVP es proveer un sistema simple, visual y confiable para:
 ## 4. Requisitos funcionales (RF) y Criterios de Aceptación (EARS)
 
 ### RF-1: Gestión, Catálogo y Ciclo de Vida de Categorías
+
 El sistema debe gestionar un catálogo global de categorías diferenciadas por su naturaleza financiera.
 
 - **CA-1.1 (Clasificación e inmutabilidad de tipo):** El sistema DEBE asegurar que toda categoría pertenezca estrictamente a uno de dos tipos de dominio: `income` (Ingreso) o `expense` (Gasto). El tipo asignado es inmutable y no podrá modificarse tras la creación de la categoría.
 - **CA-1.2 (Catálogo inicial predeterminado):** CUANDO el sistema se inicializa por primera vez, el sistema DEBE crear automáticamente un catálogo base de categorías sugeridas:
   - Categorías de Gasto (`expense`): `Alimentación`, `Vivienda`, `Transporte`, `Servicios`, `Salud`, `Ocio`.
   - Categorías de Ingreso (`income`): `Salario`, `Otros`.
-- **CA-1.3 (Validación de nombre de categoría):** CUANDO el usuario introduce el nombre de una categoría, el sistema DEBE exigir una longitud de 1 a 50 caracteres, recortar automáticamente espacios en blanco en los extremos (*trim*), eliminar caracteres de control no imprimibles, y rechazar cadenas vacías o formadas exclusivamente por espacios.
-- **CA-1.4 (Unicidad de nombres por tipo):** SI el usuario intenta crear o renombrar una categoría con un nombre que ya existe dentro del MISMO tipo (`income` o `expense`), evaluado de forma insensible a mayúsculas y minúsculas (*case-insensitive*) y recortando espacios, ENTONCES el sistema DEBE rechazar la operación y mostrar un mensaje de error indicando la duplicidad en ese tipo. Se permite la existencia del mismo nombre en naturalezas distintas (ej. `Otros` en Ingreso y `Otros` en Gasto). Al renombrar una categoría, el chequeo de unicidad DEBE excluir el identificador propio de la categoría editada para permitir cambios de capitalización (ej. de "comida" a "Comida").
+- **CA-1.3 (Validación de nombre de categoría):** CUANDO el usuario introduce el nombre de una categoría, el sistema DEBE exigir una longitud de 1 a 50 caracteres, recortar automáticamente espacios en blanco en los extremos (_trim_), eliminar caracteres de control no imprimibles, y rechazar cadenas vacías o formadas exclusivamente por espacios.
+- **CA-1.4 (Unicidad de nombres por tipo):** SI el usuario intenta crear o renombrar una categoría con un nombre que ya existe dentro del MISMO tipo (`income` o `expense`), evaluado de forma insensible a mayúsculas y minúsculas (_case-insensitive_) y recortando espacios, ENTONCES el sistema DEBE rechazar la operación y mostrar un mensaje de error indicando la duplicidad en ese tipo. Se permite la existencia del mismo nombre en naturalezas distintas (ej. `Otros` en Ingreso y `Otros` en Gasto). Al renombrar una categoría, el chequeo de unicidad DEBE excluir el identificador propio de la categoría editada para permitir cambios de capitalización (ej. de "comida" a "Comida").
 - **CA-1.5 (Edición de nombre de categoría):** CUANDO el usuario modifica el nombre de una categoría respetando las reglas de validación y unicidad, el sistema DEBE actualizar dicho nombre en la entidad, manteniéndose visible de forma consistente en todos los presupuestos, transacciones y vistas históricas y activas mediante su clave primaria.
 - **CA-1.6 (Bloqueo de eliminación por integridad referencial y auditoría):** SI el usuario solicita eliminar una categoría que posee al menos una transacción registrada (en cualquier mes) O que posee un presupuesto asignado explícito con monto estrictamente mayor a cero (`monto > $0.00`) en cualquier mes (pasado, presente o futuro), ENTONCES el sistema DEBE bloquear la eliminación y mostrar un mensaje de error explicativo indicando que la categoría contiene registros asociados y no puede eliminarse.
 - **CA-1.7 (Eliminación de categoría vacía y categorías base no utilizadas):** CUANDO el usuario solicita eliminar una categoría que carece totalmente de transacciones y de asignaciones presupuestarias activas (`monto > $0.00`) en todos los períodos (incluyendo categorías predeterminadas del catálogo inicial que no hayan sido usadas), el sistema DEBE eliminarla de forma definitiva del catálogo.
@@ -51,9 +56,10 @@ El sistema debe gestionar un catálogo global de categorías diferenciadas por s
 ---
 
 ### RF-2: Planificación Presupuestaria Mensual
+
 El sistema debe permitir definir presupuestos independientes para cada mes calendario, tanto para categorías de gasto como para categorías de ingreso.
 
-- **CA-2.1 (Aislamiento de períodos):** El sistema DEBE organizar los presupuestos por períodos de mes calendario independientes (año y mes), sin trasladar saldos, excedentes o deudas de un mes a otro (*sin arrastre / carryover*).
+- **CA-2.1 (Aislamiento de períodos):** El sistema DEBE organizar los presupuestos por períodos de mes calendario independientes (año y mes), sin trasladar saldos, excedentes o deudas de un mes a otro (_sin arrastre / carryover_).
 - **CA-2.2 (Límites de gasto y metas de ingreso):** CUANDO el usuario asigna o edita un presupuesto mensual para una categoría, el sistema DEBE almacenar dicho valor para el período seleccionado, permitiendo montos entre `$0.00` y `$999,999,999.99` inclusive.
 - **CA-2.3 (Validación estricta de formato de presupuesto):** SI el usuario ingresa un monto presupuestario menor a cero, superior a `$999,999,999.99`, con caracteres no numéricos o con más de dos decimales, ENTONCES el sistema DEBE rechazar la entrada con un mensaje de validación explícito (sin aplicar redondeos silenciosos en la entrada).
 - **CA-2.4 (Categorías no presupuestadas y restablecimiento):** MIENTRAS una categoría no cuente con un presupuesto configurado explícitamente para un mes determinado (o si su monto se edita a `$0.00`), el sistema DEBE considerar su presupuesto asignado como `$0.00`. Asignar `$0.00` a una categoría equivale a dejarla sin presupuesto para ese período.
@@ -67,9 +73,10 @@ El sistema debe permitir definir presupuestos independientes para cada mes calen
 ---
 
 ### RF-3: Registro, Validación y Mantenimiento de Transacciones
+
 El sistema debe permitir el registro manual y administración estricta de ingresos y gastos reales.
 
-- **CA-3.1 (Atributos obligatorios, derivación de tipo y formato de nota):** CUANDO el usuario registra una transacción, el sistema DEBE requerir obligatoriamente: monto, categoría y fecha. El tipo de transacción (`income` o `expense`) se deriva de forma automática e intrínseca a partir de la categoría seleccionada. Opcionalmente, admite una nota de texto de hasta 250 caracteres; ante entradas con saltos de línea (`\n`, `\r`) o tabulaciones, el sistema DEBE normalizarlas automáticamente reemplazándolas por un único espacio en blanco y aplicando recorte de extremos (*trim*).
+- **CA-3.1 (Atributos obligatorios, derivación de tipo y formato de nota):** CUANDO el usuario registra una transacción, el sistema DEBE requerir obligatoriamente: monto, categoría y fecha. El tipo de transacción (`income` o `expense`) se deriva de forma automática e intrínseca a partir de la categoría seleccionada. Opcionalmente, admite una nota de texto de hasta 250 caracteres; ante entradas con saltos de línea (`\n`, `\r`) o tabulaciones, el sistema DEBE normalizarlas automáticamente reemplazándolas por un único espacio en blanco y aplicando recorte de extremos (_trim_).
 - **CA-3.2 (Validación de monto de transacción):** SI el usuario intenta registrar o editar una transacción con un monto menor o igual a cero (`monto <= 0`), con más de dos decimales o superior a `$999,999,999.99`, ENTONCES el sistema DEBE rechazar la operación con un mensaje de error de validación claro.
 - **CA-3.3 (Formato temporal y validación de fecha de transacción):** El sistema DEBE gestionar las fechas de transacción exclusivamente como fecha de calendario en formato `YYYY-MM-DD` (sin componente de hora). SI la fecha ingresada es anterior a `2000-01-01`, posterior a la fecha del día actual del usuario (provista como fecha de referencia externa al core), o no corresponde a una fecha gregoriana válida (ej. `2026-02-29`), ENTONCES el sistema DEBE rechazar la transacción con un mensaje de error explicativo.
 - **CA-3.4 (Consistencia de tipo entre transacción y categoría en el core):** En el núcleo del sistema, SI una transacción recibe un tipo que no coincide estrictamente con el tipo configurado en la categoría asociada (`income` con `income` o `expense` con `expense`), ENTONCES el núcleo DEBE rechazar la operación por inconsistencia de datos.
@@ -81,6 +88,7 @@ El sistema debe permitir el registro manual y administración estricta de ingres
 ---
 
 ### RF-4: Control de Ejecución, Métricas y Detección de Sobregasto
+
 El sistema debe comparar el avance real frente a los límites y metas planificadas con precisión matemática definida.
 
 - **CA-4.1 (Métricas por categoría de gasto):** El sistema DEBE computar para cada categoría de gasto (`expense`) en el mes consultado:
@@ -106,6 +114,7 @@ El sistema debe comparar el avance real frente a los límites y metas planificad
 ---
 
 ### RF-5: Resumen Financiero Consolidado y Navegación Temporal
+
 El sistema debe proveer una vista unificada del desempeño del mes y permitir la navegación temporal.
 
 - **CA-5.1 (Totales globales reales y comparativa):** El sistema DEBE calcular y presentar en el resumen del mes:
