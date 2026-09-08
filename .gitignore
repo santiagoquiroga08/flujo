@@ -11,3 +11,4 @@ dist/
 *.sqlite-journal
 *.log
 .drizzle/
+*.tsbuildinfo

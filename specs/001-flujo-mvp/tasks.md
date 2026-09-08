@@ -92,7 +92,7 @@ graph TD
 
 ### Fase 2: Núcleo Financiero Puro (`src/core/`) [TDD]
 
-- [ ] **TASK-06: Definición de tipos de dominio financiero en `src/core/types.ts`**
+- [x] **TASK-06: Definición de tipos de dominio financiero en `src/core/types.ts`**
   - **Ejecutor:** IA
   - **Estimación:** 20 min
   - **Dependencias:** TASK-02
