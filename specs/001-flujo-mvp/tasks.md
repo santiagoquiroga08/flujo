@@ -54,7 +54,7 @@ graph TD
   - **Descripción:** Revisar y dar visto bueno a [spec.md](file:///d:/antigravity/Flujo/specs/001-flujo-mvp/spec.md) y [plan.md](file:///d:/antigravity/Flujo/specs/001-flujo-mvp/plan.md), confirmando que las reglas de cálculo, casos límite y arquitectura satisfacen los objetivos del MVP.
   - **Hecho cuando:** El usuario humano confirma explícitamente en el hilo de trabajo la aprobación del plan sin objeciones pendientes.
 
-- [ ] **TASK-02: Inicialización de proyecto Next.js con TypeScript y Tailwind CSS**
+- [x] **TASK-02: Inicialización de proyecto Next.js con TypeScript y Tailwind CSS**
   - **Ejecutor:** IA
   - **Estimación:** 20 min
   - **Dependencias:** TASK-01

@@ -9,3 +9,5 @@ dist/
 .DS_Store
 *.sqlite
 *.sqlite-journal
+*.log
+.drizzle/
