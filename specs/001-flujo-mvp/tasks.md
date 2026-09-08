@@ -80,7 +80,7 @@ graph TD
   - **Descripción:** Instalar `vitest` y dependencias de testing ligero, crear `vitest.config.ts` con alias de path `@/*` alineados con `tsconfig.json` y agregar el script `npm run test`.
   - **Hecho cuando:** Ejecutar `npm run test` ejecute Vitest correctamente (mostrando al menos un test de prueba inicial en verde).
 
-- [ ] **TASK-05: Configuración de SQLite local y Drizzle ORM**
+- [x] **TASK-05: Configuración de SQLite local y Drizzle ORM**
   - **Ejecutor:** IA
   - **Estimación:** 25 min
   - **Dependencias:** TASK-02
